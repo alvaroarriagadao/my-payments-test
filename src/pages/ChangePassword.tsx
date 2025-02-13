@@ -64,6 +64,7 @@ const ChangePassword: React.FC = () => {
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {message && <p style={{ color: "green" }}>{message}</p>}
+      <br></br>
       <button onClick={() => navigate("/")}>Volver</button>
     </div>
   );
