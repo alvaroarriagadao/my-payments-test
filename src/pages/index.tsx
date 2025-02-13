@@ -13,6 +13,7 @@ interface Expense {
   firstPaymentMonth: string;
   detail: string;
   userId: string;
+  registrationDate: string;
 }
 
 const detailOptions = [
@@ -51,7 +52,27 @@ const detailOptions = [
   { value: "Travel", label: "Viajes" },
   { value: "SportsGym", label: "Deportes y gimnasio" },
   { value: "Games", label: "Juegos" },
-  { value: "Other", label: "Otro" }
+  { value: "Other", label: "Otro" },
+  { value: "Clothing", label: "Ropa" },
+  { value: "Gifts", label: "Regalos" },
+  { value: "Supplies", label: "Insumos" },
+  { value: "Education", label: "Educación" },
+  { value: "Hygiene", label: "Higiene" },
+  { value: "Beauty", label: "Belleza" },
+  { value: "Childcare", label: "Cuidado Infantil" },
+  { value: "PetExpenses", label: "Gastos de Mascota" },
+  { value: "OfficeSupplies", label: "Suministros de Oficina" },
+  { value: "Furniture", label: "Muebles" },
+  { value: "CableTV", label: "Cable/TV" },
+  { value: "BankingFees", label: "Comisiones Bancarias" },
+  { value: "Taxes", label: "Impuestos" },
+  { value: "InternetStreaming", label: "Streaming" },
+  { value: "Fitness", label: "Fitness" },
+  { value: "TravelExpenses", label: "Gastos de Viaje" },
+  { value: "MedicalCoPay", label: "Copago Médico" },
+  { value: "PersonalCare", label: "Cuidado Personal" },
+  { value: "Books", label: "Libros" },
+  { value: "Charity", label: "Caridad" }
 ];
 
 const getDefaultMonth = (): string => {
@@ -66,6 +87,11 @@ const formatNumber = (value: number | string): string => {
   return numberValue.toLocaleString("es-CL");
 };
 
+const formatDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit", year: "numeric" });
+};
+
 const getDetailLabel = (value: string): string => {
   const option = detailOptions.find((opt) => opt.value === value);
   return option ? option.label : value;
@@ -74,8 +100,8 @@ const getDetailLabel = (value: string): string => {
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="custom-tooltip">
-        <p className="label">
+      <div className="custom-tooltip" style={{ backgroundColor: "rgba(255,255,255,0.8)", padding: "8px", borderRadius: "4px" }}>
+        <p className="label" style={{ margin: 0 }}>
           {`${payload[0].name}: ${new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP" }).format(payload[0].payload.total)}`}
         </p>
       </div>
@@ -96,6 +122,9 @@ const IndexPage: React.FC = () => {
   const [detailOption, setDetailOption] = useState<any>(null);
   const [customDetail, setCustomDetail] = useState<string>("");
   const [chartData, setChartData] = useState<any[]>([]);
+  const [selectedGraphMonth, setSelectedGraphMonth] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 15;
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((usr) => {
@@ -124,22 +153,27 @@ const IndexPage: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
+    let filteredExpenses = expenses.filter(exp => exp.card === selectedCard);
+    filteredExpenses.sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime());
+    if (selectedGraphMonth !== "all") {
+      filteredExpenses = filteredExpenses.filter(exp => {
+        const d = new Date(exp.registrationDate);
+        const month = (d.getMonth() + 1).toString().padStart(2, "0");
+        const year = d.getFullYear();
+        return `${year}-${month}` === selectedGraphMonth;
+      });
+    }
     const totals: { [key: string]: number } = {};
-    expenses.forEach((exp) => {
+    filteredExpenses.forEach(exp => {
       const label = getDetailLabel(exp.detail);
       totals[label] = (totals[label] || 0) + exp.totalAmount;
     });
-    const data = Object.keys(totals).map((key) => ({
-      name: key,
-      total: totals[key]
-    }));
+    const data = Object.keys(totals).map(key => ({ name: key, total: totals[key] }));
     setChartData(data);
-  }, [expenses]);
+  }, [expenses, selectedCard, selectedGraphMonth]);
 
   const handleLogout = () => {
-    auth.signOut().then(() => {
-      navigate("/login");
-    });
+    auth.signOut().then(() => navigate("/login"));
   };
 
   const handleTotalAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,7 +202,8 @@ const IndexPage: React.FC = () => {
       installments,
       firstPaymentMonth,
       detail: finalDetail,
-      userId: user.uid
+      userId: user.uid,
+      registrationDate: new Date().toISOString()
     };
     try {
       await firestore.collection("expenses").add(data);
@@ -202,10 +237,10 @@ const IndexPage: React.FC = () => {
   };
 
   const calculateSummary = () => {
-    const filtered = expenses.filter((exp) => exp.card === selectedCard);
+    const filtered = expenses.filter(exp => exp.card === selectedCard);
     const totalCard = filtered.reduce((acc, exp) => acc + exp.totalAmount, 0);
     const summary: { [key: string]: number } = {};
-    filtered.forEach((exp) => {
+    filtered.forEach(exp => {
       const monthlyPayment = exp.totalAmount / exp.installments;
       let [year, month] = exp.firstPaymentMonth.split("-").map(Number);
       for (let i = 0; i < exp.installments; i++) {
@@ -220,6 +255,22 @@ const IndexPage: React.FC = () => {
   const { summary, totalCard } = calculateSummary();
   const sortedMonths = Object.keys(summary).sort();
 
+  const filteredExpenses = expenses
+    .filter(exp => exp.card === selectedCard)
+    .sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime());
+  const indexOfLastExpense = currentPage * itemsPerPage;
+  const indexOfFirstExpense = indexOfLastExpense - itemsPerPage;
+  const currentExpenses = filteredExpenses.slice(indexOfFirstExpense, indexOfLastExpense);
+  const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
+
+  const uniqueGraphMonths = Array.from(new Set(
+    expenses.filter(exp => exp.card === selectedCard).map(exp => {
+      const d = new Date(exp.registrationDate);
+      const month = (d.getMonth() + 1).toString().padStart(2, "0");
+      return `${d.getFullYear()}-${month}`;
+    })
+  )).sort();
+
   return (
     <div className="container">
       <header className="header">
@@ -228,7 +279,7 @@ const IndexPage: React.FC = () => {
       </header>
       <section className="filter-section">
         <label>Selecciona Tarjeta para Resumen:</label>
-        <select value={selectedCard} onChange={(e) => setSelectedCard(e.target.value)}>
+        <select value={selectedCard} onChange={(e) => { setSelectedCard(e.target.value); setCurrentPage(1); }}>
           <option value="Itau">Itau</option>
           <option value="Banco de Chile">Banco de Chile</option>
           <option value="Tenpo">Tenpo</option>
@@ -281,22 +332,20 @@ const IndexPage: React.FC = () => {
           <table>
             <thead>
               <tr>
-                <th>Tarjeta</th>
+                <th>Detalle</th>
                 <th>Monto Total</th>
                 <th>Cuotas</th>
                 <th>Mes Primera Cuota</th>
-                <th>Detalle</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {expenses.filter(exp => exp.card === selectedCard).map(exp => (
+              {currentExpenses.map(exp => (
                 <tr key={exp.id}>
-                  <td>{exp.card}</td>
+                  <td>{getDetailLabel(exp.detail)}</td>
                   <td>{new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP" }).format(exp.totalAmount)}</td>
                   <td>{exp.installments}</td>
                   <td>{exp.firstPaymentMonth}</td>
-                  <td>{getDetailLabel(exp.detail)}</td>
                   <td>
                     <button onClick={async () => { await firestore.collection("expenses").doc(exp.id).delete(); }}>Eliminar</button>
                   </td>
@@ -304,6 +353,13 @@ const IndexPage: React.FC = () => {
               ))}
             </tbody>
           </table>
+          {filteredExpenses.length > itemsPerPage && (
+            <div className="pagination">
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>Anterior</button>
+              <span>{currentPage} / {totalPages}</span>
+              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>Siguiente</button>
+            </div>
+          )}
         </div>
       </section>
       <section className="summary-section">
@@ -338,16 +394,25 @@ const IndexPage: React.FC = () => {
         </div>
       </section>
       <section className="chart-section">
-        <h2>Gráfico de gastos</h2>
+        <h2>Gráfico de Gastos</h2>
+        <div className="graph-filter">
+          <label>Filtrar por mes de registro:</label>
+          <select value={selectedGraphMonth} onChange={(e) => { setSelectedGraphMonth(e.target.value); setCurrentPage(1); }}>
+            <option value="all">Todos</option>
+            {uniqueGraphMonths.map(month => (
+              <option key={month} value={month}>{month}</option>
+            ))}
+          </select>
+        </div>
         <div style={{ width: "100%", height: 300 }}>
           <ResponsiveContainer>
             <PieChart>
               <Pie data={chartData} dataKey="total" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#87cefa"][index % 5]} />
+                  <Cell key={`cell-${index}`} fill={["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#87cefa", "#87fefa", "#82ce2a", "#811e2a"][index % 8]} />
                 ))}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={false} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>

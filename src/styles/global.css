@@ -134,3 +134,29 @@ body {
     border-radius: 4px;
   }
   
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 16px;
+    gap: 12px;
+  }
+  
+  .pagination button {
+    padding: 6px 12px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .pagination button:disabled {
+    background-color: #ccc;
+    cursor: default;
+  }
+  
+  .pagination span {
+    font-size: 1rem;
+  }
