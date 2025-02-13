@@ -4,6 +4,7 @@ import { navigate } from "gatsby";
 import "../styles/global.css";
 
 const ChangePassword: React.FC = () => {
+  const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
@@ -13,15 +14,20 @@ const ChangePassword: React.FC = () => {
     e.preventDefault();
     const user = auth.currentUser;
     if (!user || !user.email) {
-      setError("No hay usuario autenticado.");
+      setError("No hay usuario autenticado. Por favor, inicie sesión.");
       return;
     }
-    const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+    if (user.email !== email) {
+      setError("El correo ingresado no coincide con el usuario autenticado.");
+      return;
+    }
+    const credential = firebase.auth.EmailAuthProvider.credential(email, currentPassword);
     try {
       await user.reauthenticateWithCredential(credential);
       await user.updatePassword(newPassword);
       setMessage("Contraseña actualizada con éxito.");
       setError("");
+      setEmail("");
       setCurrentPassword("");
       setNewPassword("");
     } catch (err: any) {
@@ -43,28 +49,21 @@ const ChangePassword: React.FC = () => {
       <h2>Cambiar Contraseña</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
+          <label>Correo Electrónico:</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </div>
+        <div className="form-group">
           <label>Contraseña Actual:</label>
-          <input
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            required
-          />
+          <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
         </div>
         <div className="form-group">
           <label>Nueva Contraseña:</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-          />
+          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
         </div>
         <button type="submit">Actualizar Contraseña</button>
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {message && <p style={{ color: "green" }}>{message}</p>}
-      <br></br>
       <button onClick={() => navigate("/")}>Volver</button>
     </div>
   );

@@ -316,7 +316,7 @@ const IndexPage: React.FC = () => {
   return (
     <div className="container">
       <header className="header">
-        <h1>Mis Pagos Mensuales</h1>
+        <h1>Mis pagos tarjetas de Créditos</h1>
         <div style={{ display: "flex", gap: "8px" }}>
           <button onClick={openModal}>Configuración predeterminada</button>
           <button onClick={handleLogout}>Cerrar Sesión</button>
@@ -352,7 +352,7 @@ const IndexPage: React.FC = () => {
         </div>
       )}
       <section className="filter-section">
-        <label>Selecciona Tarjeta para Resumen:</label>
+        <label>Selecciona Resumen:</label>
         <select value={selectedCard} onChange={(e) => { setSelectedCard(e.target.value); setCurrentPage(1); }}>
           {bankOptions.map(bank => (
             <option key={bank} value={bank}>{bank}</option>
@@ -363,7 +363,7 @@ const IndexPage: React.FC = () => {
         <h2>Agregar Gasto</h2>
         <form onSubmit={handleAddExpense}>
           <div className="form-group">
-            <label>Tarjeta:</label>
+            <label>Tarjeta de compra:</label>
             <select value={card} onChange={(e) => setCard(e.target.value)}>
               {bankOptions.map(bank => (
                 <option key={bank} value={bank}>{bank}</option>
@@ -375,11 +375,11 @@ const IndexPage: React.FC = () => {
             <input type="text" value={totalAmountInput} onChange={handleTotalAmountChange} required />
           </div>
           <div className="form-group">
-            <label>Cuotas:</label>
+            <label>Número de cuotas:</label>
             <input type="number" value={installments} onChange={(e) => setInstallments(parseInt(e.target.value))} min="1" required />
           </div>
           <div className="form-group">
-            <label>Mes de la Primera Cuota:</label>
+            <label>Mes de la primera Cuota:</label>
             <input type="month" value={firstPaymentMonth} onChange={(e) => setFirstPaymentMonth(e.target.value)} required />
           </div>
           <div className="form-group">
@@ -395,7 +395,7 @@ const IndexPage: React.FC = () => {
               <input type="text" value={customDetail} onChange={(e) => setCustomDetail(e.target.value)} placeholder="Ingrese detalle" />
             )}
           </div>
-          <button type="submit">Agregar Gasto</button>
+          <button class="button-add" type="submit">Agregar Gasto</button>
         </form>
       </section>
       <section className="purchases-section">

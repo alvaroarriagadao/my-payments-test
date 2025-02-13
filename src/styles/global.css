@@ -183,6 +183,19 @@ table th {
   transition: background 0.3s;
 }
 
+.button-add {
+  width: 100%;
+  padding: 12px;
+  background: #667eea;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
 .login-container button:hover,
 .change-password-container button:hover {
   background: #564ab1;
