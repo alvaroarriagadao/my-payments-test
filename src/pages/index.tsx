@@ -16,7 +16,7 @@ interface Expense {
   registrationDate: string;
 }
 
-const bankOptions = [ "Itaú", "Tenpo", "Banco de Chile", "Santander", "BCI", "BancoEstado", "Scotiabank", "Banco Falabella", "MercadoPago", "Mach", "Banco Security", "Banco Ripley", "Banco BICE", ];
+const bankOptions = [ "Itau", "Tenpo", "Banco de Chile", "Santander", "BCI", "BancoEstado", "Scotiabank", "Banco Falabella", "MercadoPago", "Mach", "Banco Security", "Banco Ripley", "Banco BICE", ];
 
 const detailOptions = [
   { value: "Fuel", label: "Combustible" },
