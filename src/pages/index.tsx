@@ -16,6 +16,8 @@ interface Expense {
   registrationDate: string;
 }
 
+const bankOptions = [ "Itaú", "Tenpo", "Banco de Chile", "Santander", "BCI", "BancoEstado", "Scotiabank", "Banco Falabella", "MercadoPago", "Mach", "Banco Security", "Banco Ripley", "Banco BICE", ];
+
 const detailOptions = [
   { value: "Fuel", label: "Combustible" },
   { value: "Supermarket", label: "Supermercado" },
@@ -73,7 +75,7 @@ const detailOptions = [
   { value: "PersonalCare", label: "Cuidado Personal" },
   { value: "Books", label: "Libros" },
   { value: "Charity", label: "Caridad" },
-  { value: "Other", label: "Otro" },
+  { value: "Other", label: "Otro" }
 ];
 
 const monthNames = [
@@ -127,10 +129,22 @@ const IndexPage: React.FC = () => {
   const [firstPaymentMonth, setFirstPaymentMonth] = useState<string>(getDefaultMonth());
   const [detailOption, setDetailOption] = useState<any>(null);
   const [customDetail, setCustomDetail] = useState<string>("");
+  const [billingDay, setBillingDay] = useState<number>(24);
   const [chartData, setChartData] = useState<any[]>([]);
   const [selectedGraphMonth, setSelectedGraphMonth] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [showModal, setShowModal] = useState<boolean>(false);
   const itemsPerPage = 15;
+
+  useEffect(() => {
+    const storedDefaults = localStorage.getItem("defaultSettings");
+    if (storedDefaults) {
+      const defaults = JSON.parse(storedDefaults);
+      if (defaults.selectedCard) setSelectedCard(defaults.selectedCard);
+      if (defaults.card) setCard(defaults.card);
+      if (defaults.billingDay) setBillingDay(defaults.billingDay);
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((usr) => {
@@ -224,12 +238,13 @@ const IndexPage: React.FC = () => {
 
   const getNextBillingDate = (): string => {
     const today = new Date();
-    if (today.getDate() < 24) {
-      return `24 de ${monthNames[today.getMonth()]}`;
+    const bd = billingDay;
+    if (today.getDate() < bd) {
+      return `${bd} de ${monthNames[today.getMonth()]}`;
     } else {
       let nextMonth = today.getMonth() + 1;
       if (nextMonth > 11) nextMonth = 0;
-      return `24 de ${monthNames[nextMonth]}`;
+      return `${bd} de ${monthNames[nextMonth]}`;
     }
   };
 
@@ -267,19 +282,81 @@ const IndexPage: React.FC = () => {
     })
   )).sort((a, b) => monthNames.indexOf(a) - monthNames.indexOf(b));
 
+  const openModal = () => {
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
+  const handleSaveDefaults = (e: React.FormEvent) => {
+    e.preventDefault();
+    const defaults = {
+      selectedCard: card,
+      card: card,
+      billingDay
+    };
+    localStorage.setItem("defaultSettings", JSON.stringify(defaults));
+    setSelectedCard(defaults.selectedCard);
+    setCard(defaults.card);
+    closeModal();
+  };
+
+  useEffect(() => {
+    const storedDefaults = localStorage.getItem("defaultSettings");
+    if (storedDefaults) {
+      const defaults = JSON.parse(storedDefaults);
+      if (defaults.selectedCard) setSelectedCard(defaults.selectedCard);
+      if (defaults.card) setCard(defaults.card);
+      if (defaults.billingDay) setBillingDay(defaults.billingDay);
+    }
+  }, []);
+
   return (
     <div className="container">
       <header className="header">
         <h1>Mis Pagos Mensuales</h1>
-        <button onClick={handleLogout}>Cerrar Sesión</button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button onClick={openModal}>Configuración predeterminada</button>
+          <button onClick={handleLogout}>Cerrar Sesión</button>
+        </div>
       </header>
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Configuración Predeterminada</h3>
+            <form onSubmit={handleSaveDefaults}>
+              <div className="form-group">
+                <label>Selecciona Tarjeta para Resumen:</label>
+                <select value={card} onChange={(e) => setCard(e.target.value)}>
+                  {bankOptions.map(bank => (
+                    <option key={bank} value={bank}>{bank}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Fecha de Facturación (día):</label>
+                <select value={billingDay} onChange={(e) => setBillingDay(parseInt(e.target.value))}>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+                <button type="submit">Guardar</button>
+                <button type="button" onClick={closeModal}>Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       <section className="filter-section">
         <label>Selecciona Tarjeta para Resumen:</label>
         <select value={selectedCard} onChange={(e) => { setSelectedCard(e.target.value); setCurrentPage(1); }}>
-          <option value="Itau">Itau</option>
-          <option value="Banco de Chile">Banco de Chile</option>
-          <option value="Tenpo">Tenpo</option>
-          <option value="Banco Estado">Banco Estado</option>
+          {bankOptions.map(bank => (
+            <option key={bank} value={bank}>{bank}</option>
+          ))}
         </select>
       </section>
       <section className="form-section">
@@ -288,10 +365,9 @@ const IndexPage: React.FC = () => {
           <div className="form-group">
             <label>Tarjeta:</label>
             <select value={card} onChange={(e) => setCard(e.target.value)}>
-              <option value="Itau">Itau</option>
-              <option value="Banco de Chile">Banco de Chile</option>
-              <option value="Tenpo">Tenpo</option>
-              <option value="Banco Estado">Banco Estado</option>
+              {bankOptions.map(bank => (
+                <option key={bank} value={bank}>{bank}</option>
+              ))}
             </select>
           </div>
           <div className="form-group">
@@ -407,7 +483,7 @@ const IndexPage: React.FC = () => {
             <PieChart>
               <Pie data={chartData} dataKey="total" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#87cefa","#27cefa","#412efa","#872efa"][index % 8]} />
+                  <Cell key={`cell-${index}`} fill={["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#87cefa", "#27cefa", "#412efa", "#872efa"][index % 8]} />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} cursor={false} />
