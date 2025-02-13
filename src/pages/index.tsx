@@ -18,24 +18,26 @@ interface Expense {
 
 const detailOptions = [
   { value: "Fuel", label: "Combustible" },
+  { value: "Supermarket", label: "Supermercado" },
+  { value: "MercadoLibre", label: "Mercado Libre" },
+  { value: "Butcher", label: "Carnicería" },
+  { value: "Entertainment", label: "Carrete" },
+  { value: "Water", label: "Agua" },
+  { value: "Electricity", label: "Luz" },
+  { value: "Gas", label: "Gas" },
+  { value: "Internet", label: "Internet" },
   { value: "Tolls", label: "Peajes y troncales" },
+  { value: "Restaurant", label: "Restaurante" },
   { value: "PublicTransport", label: "Transporte público" },
   { value: "Parking", label: "Estacionamientos" },
   { value: "VehicleMaintenance", label: "Mantenimiento vehicular" },
   { value: "CarInsurance", label: "Seguro automotriz" },
   { value: "RideSharing", label: "Uber/Didi" },
-  { value: "Supermarket", label: "Supermercado" },
   { value: "Greengrocer", label: "Verdulería" },
-  { value: "Butcher", label: "Carnicería" },
   { value: "Bakery", label: "Panadería" },
   { value: "FastFood", label: "Comida rápida" },
-  { value: "Restaurant", label: "Restaurante" },
   { value: "Delivery", label: "Delivery" },
   { value: "Rent", label: "Arriendo/Dividendo" },
-  { value: "Water", label: "Agua" },
-  { value: "Electricity", label: "Luz" },
-  { value: "Gas", label: "Gas" },
-  { value: "Internet", label: "Internet" },
   { value: "MobilePhone", label: "Teléfono móvil" },
   { value: "CommonExpenses", label: "Gastos comunes" },
   { value: "HomeInsurance", label: "Seguro hogar" },
@@ -46,13 +48,11 @@ const detailOptions = [
   { value: "Dental", label: "Dentista" },
   { value: "Optical", label: "Óptica/Lentes" },
   { value: "AlcoholTobacco", label: "Bebestibles" },
-  { value: "Entertainment", label: "Salidas" },
   { value: "CinemaTheater", label: "Cine/Teatro/Eventos" },
   { value: "Subscriptions", label: "Suscripciones" },
   { value: "Travel", label: "Viajes" },
   { value: "SportsGym", label: "Deportes y gimnasio" },
   { value: "Games", label: "Juegos" },
-  { value: "Other", label: "Otro" },
   { value: "Clothing", label: "Ropa" },
   { value: "Gifts", label: "Regalos" },
   { value: "Supplies", label: "Insumos" },
@@ -72,7 +72,13 @@ const detailOptions = [
   { value: "MedicalCoPay", label: "Copago Médico" },
   { value: "PersonalCare", label: "Cuidado Personal" },
   { value: "Books", label: "Libros" },
-  { value: "Charity", label: "Caridad" }
+  { value: "Charity", label: "Caridad" },
+  { value: "Other", label: "Otro" },
+];
+
+const monthNames = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 ];
 
 const getDefaultMonth = (): string => {
@@ -153,18 +159,15 @@ const IndexPage: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    let filteredExpenses = expenses.filter(exp => exp.card === selectedCard);
-    filteredExpenses.sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime());
+    let filteredForGraph = expenses.filter(exp => exp.card === selectedCard);
     if (selectedGraphMonth !== "all") {
-      filteredExpenses = filteredExpenses.filter(exp => {
+      filteredForGraph = filteredForGraph.filter(exp => {
         const d = new Date(exp.registrationDate);
-        const month = (d.getMonth() + 1).toString().padStart(2, "0");
-        const year = d.getFullYear();
-        return `${year}-${month}` === selectedGraphMonth;
+        return monthNames[d.getMonth()] === selectedGraphMonth;
       });
     }
     const totals: { [key: string]: number } = {};
-    filteredExpenses.forEach(exp => {
+    filteredForGraph.forEach(exp => {
       const label = getDetailLabel(exp.detail);
       totals[label] = (totals[label] || 0) + exp.totalAmount;
     });
@@ -221,17 +224,11 @@ const IndexPage: React.FC = () => {
 
   const getNextBillingDate = (): string => {
     const today = new Date();
-    const monthNames = [
-      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ];
     if (today.getDate() < 24) {
       return `24 de ${monthNames[today.getMonth()]}`;
     } else {
       let nextMonth = today.getMonth() + 1;
-      if (nextMonth > 11) {
-        nextMonth = 0;
-      }
+      if (nextMonth > 11) nextMonth = 0;
       return `24 de ${monthNames[nextMonth]}`;
     }
   };
@@ -266,10 +263,9 @@ const IndexPage: React.FC = () => {
   const uniqueGraphMonths = Array.from(new Set(
     expenses.filter(exp => exp.card === selectedCard).map(exp => {
       const d = new Date(exp.registrationDate);
-      const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      return `${d.getFullYear()}-${month}`;
+      return monthNames[d.getMonth()];
     })
-  )).sort();
+  )).sort((a, b) => monthNames.indexOf(a) - monthNames.indexOf(b));
 
   return (
     <div className="container">
@@ -336,6 +332,7 @@ const IndexPage: React.FC = () => {
                 <th>Monto Total</th>
                 <th>Cuotas</th>
                 <th>Mes Primera Cuota</th>
+                <th>Fecha Registro</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -346,6 +343,7 @@ const IndexPage: React.FC = () => {
                   <td>{new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP" }).format(exp.totalAmount)}</td>
                   <td>{exp.installments}</td>
                   <td>{exp.firstPaymentMonth}</td>
+                  <td>{formatDate(exp.registrationDate)}</td>
                   <td>
                     <button onClick={async () => { await firestore.collection("expenses").doc(exp.id).delete(); }}>Eliminar</button>
                   </td>
@@ -396,7 +394,7 @@ const IndexPage: React.FC = () => {
       <section className="chart-section">
         <h2>Gráfico de Gastos</h2>
         <div className="graph-filter">
-          <label>Filtrar por mes de registro:</label>
+          <label>Filtrar por mes:</label>
           <select value={selectedGraphMonth} onChange={(e) => { setSelectedGraphMonth(e.target.value); setCurrentPage(1); }}>
             <option value="all">Todos</option>
             {uniqueGraphMonths.map(month => (
@@ -409,7 +407,7 @@ const IndexPage: React.FC = () => {
             <PieChart>
               <Pie data={chartData} dataKey="total" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#87cefa", "#87fefa", "#82ce2a", "#811e2a"][index % 8]} />
+                  <Cell key={`cell-${index}`} fill={["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#87cefa","#27cefa","#412efa","#872efa"][index % 8]} />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} cursor={false} />
