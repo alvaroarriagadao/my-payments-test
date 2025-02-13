@@ -16,7 +16,20 @@ interface Expense {
   registrationDate: string;
 }
 
-const bankOptions = [ "Itau", "Tenpo", "Banco de Chile", "Santander", "BCI", "BancoEstado", "Scotiabank", "Banco Falabella", "MercadoPago", "Mach", "Banco Security", "Banco Ripley", "Banco BICE", ];
+const bankOptions = [
+  "Itau",
+  "Banco de Chile",
+  "Banco Santander Chile",
+  "Banco BCI",
+  "BancoEstado",
+  "Tenpo",
+  "MercadoPago",
+  "Scotiabank Chile",
+  "Banco Security",
+  "Banco Falabella",
+  "Banco Ripley",
+  "Banco BICE"
+];
 
 const detailOptions = [
   { value: "Fuel", label: "Combustible" },
@@ -133,8 +146,11 @@ const IndexPage: React.FC = () => {
   const [chartData, setChartData] = useState<any[]>([]);
   const [selectedGraphMonth, setSelectedGraphMonth] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [showModal, setShowModal] = useState<boolean>(false);
+  const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
+  const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const itemsPerPage = 15;
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [passMsg, setPassMsg] = useState<string>("");
 
   useEffect(() => {
     const storedDefaults = localStorage.getItem("defaultSettings");
@@ -282,12 +298,12 @@ const IndexPage: React.FC = () => {
     })
   )).sort((a, b) => monthNames.indexOf(a) - monthNames.indexOf(b));
 
-  const openModal = () => {
-    setShowModal(true);
+  const openConfigModal = () => {
+    setShowConfigModal(true);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
+  const closeConfigModal = () => {
+    setShowConfigModal(false);
   };
 
   const handleSaveDefaults = (e: React.FormEvent) => {
@@ -300,29 +316,43 @@ const IndexPage: React.FC = () => {
     localStorage.setItem("defaultSettings", JSON.stringify(defaults));
     setSelectedCard(defaults.selectedCard);
     setCard(defaults.card);
-    closeModal();
+    closeConfigModal();
   };
 
-  useEffect(() => {
-    const storedDefaults = localStorage.getItem("defaultSettings");
-    if (storedDefaults) {
-      const defaults = JSON.parse(storedDefaults);
-      if (defaults.selectedCard) setSelectedCard(defaults.selectedCard);
-      if (defaults.card) setCard(defaults.card);
-      if (defaults.billingDay) setBillingDay(defaults.billingDay);
+  const openPasswordModal = () => {
+    setShowPasswordModal(true);
+  };
+
+  const closePasswordModal = () => {
+    setShowPasswordModal(false);
+    setNewPassword("");
+    setPassMsg("");
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await user.updatePassword(newPassword);
+      setPassMsg("Contraseña actualizada con éxito.");
+      setNewPassword("");
+    } catch (err: any) {
+      setPassMsg("Error al actualizar la contraseña: " + err.message);
     }
-  }, []);
+  };
 
   return (
     <div className="container">
       <header className="header">
-        <h1>Mis pagos tarjetas de Créditos</h1>
+        <h1>Mis Pagos Mensuales</h1>
         <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={openModal}>Configuración predeterminada</button>
+          <button onClick={openConfigModal}>Configuración predeterminada</button>
+          <button onClick={openPasswordModal}>Cambiar contraseña</button>
           <button onClick={handleLogout}>Cerrar Sesión</button>
         </div>
       </header>
-      {showModal && (
+      {showConfigModal && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Configuración Predeterminada</h3>
@@ -345,14 +375,32 @@ const IndexPage: React.FC = () => {
               </div>
               <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
                 <button type="submit">Guardar</button>
-                <button type="button" onClick={closeModal}>Cancelar</button>
+                <button type="button" onClick={closeConfigModal}>Cancelar</button>
               </div>
             </form>
           </div>
         </div>
       )}
+      {showPasswordModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Cambiar Contraseña</h3>
+            <form onSubmit={handleChangePassword}>
+              <div className="form-group">
+                <label>Nueva Contraseña:</label>
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+              </div>
+              <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+                <button type="submit">Actualizar</button>
+                <button type="button" onClick={closePasswordModal}>Cancelar</button>
+              </div>
+            </form>
+            {passMsg && <p style={{ color: passMsg.includes("éxito") ? "green" : "red" }}>{passMsg}</p>}
+          </div>
+        </div>
+      )}
       <section className="filter-section">
-        <label>Selecciona Resumen:</label>
+        <label>Selecciona Tarjeta para Resumen:</label>
         <select value={selectedCard} onChange={(e) => { setSelectedCard(e.target.value); setCurrentPage(1); }}>
           {bankOptions.map(bank => (
             <option key={bank} value={bank}>{bank}</option>
@@ -363,7 +411,7 @@ const IndexPage: React.FC = () => {
         <h2>Agregar Gasto</h2>
         <form onSubmit={handleAddExpense}>
           <div className="form-group">
-            <label>Tarjeta de compra:</label>
+            <label>Tarjeta:</label>
             <select value={card} onChange={(e) => setCard(e.target.value)}>
               {bankOptions.map(bank => (
                 <option key={bank} value={bank}>{bank}</option>
@@ -375,11 +423,11 @@ const IndexPage: React.FC = () => {
             <input type="text" value={totalAmountInput} onChange={handleTotalAmountChange} required />
           </div>
           <div className="form-group">
-            <label>Número de cuotas:</label>
+            <label>Cuotas:</label>
             <input type="number" value={installments} onChange={(e) => setInstallments(parseInt(e.target.value))} min="1" required />
           </div>
           <div className="form-group">
-            <label>Mes de la primera Cuota:</label>
+            <label>Mes de la Primera Cuota:</label>
             <input type="month" value={firstPaymentMonth} onChange={(e) => setFirstPaymentMonth(e.target.value)} required />
           </div>
           <div className="form-group">
@@ -395,7 +443,7 @@ const IndexPage: React.FC = () => {
               <input type="text" value={customDetail} onChange={(e) => setCustomDetail(e.target.value)} placeholder="Ingrese detalle" />
             )}
           </div>
-          <button class="button-add" type="submit">Agregar Gasto</button>
+          <button type="submit">Agregar Gasto</button>
         </form>
       </section>
       <section className="purchases-section">
