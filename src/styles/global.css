@@ -42,6 +42,7 @@ body {
   border: 1px solid grey;
   opacity:0.8;
 }
+
 .filter-section,
 .form-section,
 .purchases-section,
@@ -116,8 +117,9 @@ table th {
   }
 }
 
-.login-container {
-  max-width: 380px;
+.login-container,
+.change-password-container {
+  max-width: 400px;
   margin: 80px auto;
   padding: 30px;
   background-color: #ffffff;
@@ -127,7 +129,8 @@ table th {
   animation: fadeIn 0.5s ease-in-out;
 }
 
-.login-container h2 {
+.login-container h2,
+.change-password-container h2 {
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 20px;
@@ -136,7 +139,8 @@ table th {
 
 .login-container input[type="text"],
 .login-container input[type="password"],
-.login-container input[type="email"] {
+.login-container input[type="email"],
+.change-password-container input[type="password"] {
   width: 100%;
   padding: 12px;
   border: 1px solid #ccc;
@@ -145,7 +149,8 @@ table th {
   transition: all 0.3s;
 }
 
-.login-container input:focus {
+.login-container input:focus,
+.change-password-container input:focus {
   border-color: #667eea;
   outline: none;
   box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
@@ -164,7 +169,8 @@ table th {
   height: 16px;
 }
 
-.login-container button {
+.login-container button,
+.change-password-container button {
   width: 100%;
   padding: 12px;
   background: #667eea;
@@ -177,12 +183,19 @@ table th {
   transition: background 0.3s;
 }
 
-.login-container button:hover {
+.login-container button:hover,
+.change-password-container button:hover {
   background: #564ab1;
 }
 
 p.error {
   color: red;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+p.success {
+  color: green;
   font-size: 14px;
   margin-top: 10px;
 }

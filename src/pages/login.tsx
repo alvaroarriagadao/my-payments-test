@@ -41,7 +41,7 @@ const LoginPage: React.FC = () => {
       {error && <p style={{ color: "red" }}>{error}</p>}
       <p>
         ¿Desea cambiar su contraseña?{" "}
-        <span onClick={() => navigate("/change-password")} style={{ color: "#3498db", cursor: "pointer", textDecoration: "underline" }}>
+        <span onClick={() => navigate("/ChangePassword")} style={{ color: "#3498db", cursor: "pointer", textDecoration: "underline" }}>
           Haga clic aquí
         </span>
       </p>
