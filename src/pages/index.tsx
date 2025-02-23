@@ -96,11 +96,18 @@ const monthNames = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 ];
 
-const getDefaultMonth = (): string => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = (now.getMonth() + 1).toString().padStart(2, "0");
-  return `${year}-${month}`;
+const getDefaultFirstPaymentMonth = (billingDay: number): string => {
+  const today = new Date();
+  let year = today.getFullYear();
+  let month = today.getMonth(); // 0-indexed
+  if (today.getDate() >= billingDay) {
+    month = month + 1;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+  }
+  return `${year}-${(month + 1).toString().padStart(2, "0")}`;
 };
 
 const formatNumber = (value: number | string): string => {
@@ -139,7 +146,7 @@ const IndexPage: React.FC = () => {
   const [totalAmountRaw, setTotalAmountRaw] = useState<number>(0);
   const [totalAmountInput, setTotalAmountInput] = useState<string>("");
   const [installments, setInstallments] = useState<number>(1);
-  const [firstPaymentMonth, setFirstPaymentMonth] = useState<string>(getDefaultMonth());
+  const [firstPaymentMonth, setFirstPaymentMonth] = useState<string>(getDefaultFirstPaymentMonth(24));
   const [detailOption, setDetailOption] = useState<any>(null);
   const [customDetail, setCustomDetail] = useState<string>("");
   const [billingDay, setBillingDay] = useState<number>(24);
@@ -158,7 +165,11 @@ const IndexPage: React.FC = () => {
       const defaults = JSON.parse(storedDefaults);
       if (defaults.selectedCard) setSelectedCard(defaults.selectedCard);
       if (defaults.card) setCard(defaults.card);
-      if (defaults.billingDay) setBillingDay(Number(defaults.billingDay));
+      if (defaults.billingDay) {
+        const bd = Number(defaults.billingDay);
+        setBillingDay(bd);
+        setFirstPaymentMonth(getDefaultFirstPaymentMonth(bd));
+      }
     }
   }, []);
 
@@ -240,11 +251,11 @@ const IndexPage: React.FC = () => {
     };
     try {
       await firestore.collection("expenses").add(data);
-      // No reiniciamos el valor de "card", para mantener la configuración predeterminada.
+      // No reiniciamos "card" para mantener la configuración predeterminada.
       setTotalAmountRaw(0);
       setTotalAmountInput("");
       setInstallments(1);
-      setFirstPaymentMonth(getDefaultMonth());
+      setFirstPaymentMonth(getDefaultFirstPaymentMonth(billingDay));
       setDetailOption(null);
       setCustomDetail("");
     } catch (error) {
@@ -428,7 +439,7 @@ const IndexPage: React.FC = () => {
           </div>
           <div className="form-group">
             <label>Mes de la Primera Cuota:</label>
-            <input type="month" value={firstPaymentMonth} onChange={(e) => setFirstPaymentMonth(e.target.value)} required />
+            <input type="month" value={getDefaultFirstPaymentMonth(billingDay)} onChange={(e) => setFirstPaymentMonth(e.target.value)} required />
           </div>
           <div className="form-group">
             <label>Detalle del Gasto:</label>
