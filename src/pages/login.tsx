@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { navigate } from "gatsby";
 import { firebase, auth } from "../firebase/config";
 import "../styles/global.css";
@@ -9,11 +9,34 @@ const LoginPage: React.FC = () => {
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("savedEmail");
+    const savedPassword = localStorage.getItem("savedPassword");
+    if (savedEmail && savedPassword) {
+      setEmail(savedEmail);
+      setPassword(savedPassword);
+      setRemember(true);
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await auth.setPersistence(remember ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
+    await auth.setPersistence(
+      remember
+        ? firebase.auth.Auth.Persistence.LOCAL
+        : firebase.auth.Auth.Persistence.SESSION
+    );
     auth.signInWithEmailAndPassword(email, password)
-      .then(() => navigate("/"))
+      .then(() => {
+        if (remember) {
+          localStorage.setItem("savedEmail", email);
+          localStorage.setItem("savedPassword", password);
+        } else {
+          localStorage.removeItem("savedEmail");
+          localStorage.removeItem("savedPassword");
+        }
+        navigate("/");
+      })
       .catch((err) => {
         setError("Correo o contraseña incorrectos.");
         console.error(err);
