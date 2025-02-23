@@ -240,7 +240,6 @@ const IndexPage: React.FC = () => {
     };
     try {
       await firestore.collection("expenses").add(data);
-      setCard("Itau");
       setTotalAmountRaw(0);
       setTotalAmountInput("");
       setInstallments(1);
