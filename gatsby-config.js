@@ -1,9 +1,9 @@
 module.exports = {
   siteMetadata: {
     title: `My Monthly Payments`,
-    description: `Aplicación para gestionar pagos mensuales.`,
-    author: `Alvaro Arriagada`,
-    siteUrl: `https://loskilltrosblues.cl/`,
+    description: `Aplicación para gestionar pagos mensuales con Firebase.`,
+    author: `Tu Nombre`,
+    siteUrl: `https://tusitio.com/`,
   },
   plugins: [
     "gatsby-plugin-react-helmet",
@@ -19,9 +19,10 @@ module.exports = {
         start_url: `/`,
         background_color: `#ffffff`,
         theme_color: `#3498db`,
-        display: `minimal-ui`,
+        display: `standalone`,
         icon: `src/images/icon.png`
       }
-    }
+    },
+    "gatsby-plugin-offline"
   ]
 };
