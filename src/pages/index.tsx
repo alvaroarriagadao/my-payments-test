@@ -148,9 +148,9 @@ const IndexPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
-  const itemsPerPage = 15;
   const [newPassword, setNewPassword] = useState<string>("");
   const [passMsg, setPassMsg] = useState<string>("");
+  const itemsPerPage = 15;
 
   useEffect(() => {
     const storedDefaults = localStorage.getItem("defaultSettings");
@@ -158,7 +158,7 @@ const IndexPage: React.FC = () => {
       const defaults = JSON.parse(storedDefaults);
       if (defaults.selectedCard) setSelectedCard(defaults.selectedCard);
       if (defaults.card) setCard(defaults.card);
-      if (defaults.billingDay) setBillingDay(defaults.billingDay);
+      if (defaults.billingDay) setBillingDay(Number(defaults.billingDay));
     }
   }, []);
 
@@ -240,6 +240,7 @@ const IndexPage: React.FC = () => {
     };
     try {
       await firestore.collection("expenses").add(data);
+      // No reiniciamos el valor de "card", para mantener la configuración predeterminada.
       setTotalAmountRaw(0);
       setTotalAmountInput("");
       setInstallments(1);

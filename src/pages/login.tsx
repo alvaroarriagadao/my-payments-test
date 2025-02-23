@@ -21,11 +21,7 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await auth.setPersistence(
-      remember
-        ? firebase.auth.Auth.Persistence.LOCAL
-        : firebase.auth.Auth.Persistence.SESSION
-    );
+    await auth.setPersistence(remember ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
     auth.signInWithEmailAndPassword(email, password)
       .then(() => {
         if (remember) {
