@@ -459,7 +459,7 @@ const IndexPage: React.FC = () => {
               <input type="text" value={customDetail} onChange={(e) => setCustomDetail(e.target.value)} placeholder="Ingrese detalle" />
             )}
           </div>
-          <button type="submit">Agregar Gasto</button>
+          <button className="add-pay" type="submit">Agregar Gasto</button>
         </form>
       </section>
       <section className="purchases-section">
