@@ -359,6 +359,7 @@ const IndexPage: React.FC = () => {
 
   return (
     <div className="container">
+      <ToastContainer />
       <header className="header">
         <h1>Mis Pagos Mensuales</h1>
         <div style={{ display: "flex", gap: "8px" }}>
