@@ -4,6 +4,8 @@ import { auth, firestore, firebase } from "../firebase/config";
 import ReactSelect from "react-select";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import "../styles/global.css";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Expense {
   id: string;
@@ -252,6 +254,7 @@ const IndexPage: React.FC = () => {
     try {
       await firestore.collection("expenses").add(data);
       // No reiniciamos "card" para mantener la configuración predeterminada.
+      toast.success("¡Gasto agregado con éxito!");
       setTotalAmountRaw(0);
       setTotalAmountInput("");
       setInstallments(1);
@@ -259,6 +262,7 @@ const IndexPage: React.FC = () => {
       setDetailOption(null);
       setCustomDetail("");
     } catch (error) {
+      toast.error("Ocurrió un error al agregar el gasto.");
       console.error(error);
     }
   };
